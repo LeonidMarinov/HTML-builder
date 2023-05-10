@@ -34,34 +34,25 @@ const writeCssFiles = async () => {
   await fsp.writeFile(path.join(__dirname, 'project-dist', 'style.css'), stringData);
 }
 
-const copyAssetsDir = async () => {
-  const destinationFolderPath = path.join(__dirname, 'project-dist', 'assets');
+const copyAssetsDir = async (src, dest) => {
+  const destinationFolderPath = dest;
+
+  await fsp.rm(destinationFolderPath, { recursive: true, force: true });
   await fsp.mkdir(destinationFolderPath, { recursive: true });
 
-  const filesToCopy = await fsp.readdir(path.join(__dirname, 'assets'), { withFileTypes: true });
+  const filesToCopy = await fsp.readdir(src, { withFileTypes: true });
   for (let i = 0; i < filesToCopy.length; i++) {
     if (filesToCopy[i].isDirectory()) {
       await fsp.mkdir(path.join(__dirname, 'project-dist', 'assets', filesToCopy[i].name), { recursive: true });
     }
   }
 
-  const fontsToCopy = await fsp.readdir(path.join(__dirname, 'assets', 'fonts'), { withFileTypes: true });
-  const imgToCopy = await fsp.readdir(path.join(__dirname, 'assets', 'img'), { withFileTypes: true });
-  const svgToCopy = await fsp.readdir(path.join(__dirname, 'assets', 'svg'), { withFileTypes: true });
-
-  for (let i = 0; i < fontsToCopy.length; i++) {
-    await fsp.copyFile(path.join(__dirname, 'assets', 'fonts', fontsToCopy[i].name),
-      path.join(__dirname, 'project-dist', 'assets', 'fonts', fontsToCopy[i].name));
-  }
-
-  for (let i = 0; i < imgToCopy.length; i++) {
-    await fsp.copyFile(path.join(__dirname, 'assets', 'img', imgToCopy[i].name),
-      path.join(__dirname, 'project-dist', 'assets', 'img', imgToCopy[i].name));
-  }
-
-  for (let i = 0; i < svgToCopy.length; i++) {
-    await fsp.copyFile(path.join(__dirname, 'assets', 'svg', svgToCopy[i].name),
-      path.join(__dirname, 'project-dist', 'assets', 'svg', svgToCopy[i].name));
+  for (let i = 0; i < filesToCopy.length; i++) {
+    const currDir = await fsp.readdir(path.join(__dirname, 'assets', filesToCopy[i].name), { withFileTypes: true });
+    for (let j = 0; j < currDir.length; j++) {
+      await fsp.copyFile(path.join(__dirname, 'assets', filesToCopy[i].name, currDir[j].name),
+        path.join(__dirname, 'project-dist', 'assets', filesToCopy[i].name, currDir[j].name));
+    }
   }
 }
 
@@ -83,6 +74,6 @@ const copyHtml = async () => {
   await fsp.writeFile(path.join(__dirname, 'project-dist', 'index.html'), stringbuildHtml);
 }
 
-copyAssetsDir();
+copyAssetsDir(path.join(__dirname, 'assets'), path.join(__dirname, 'project-dist', 'assets'));
 writeCssFiles();
 copyHtml();
